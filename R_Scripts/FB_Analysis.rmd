@@ -1,0 +1,274 @@
+setwd('/Users/ajdonna/Desktop/CoursesNpractice/FaceBook Data/PythonScripts&Data')
+
+```{r}
+FB_Year <- read.csv('Yearly_FB_data.csv')
+
+summary(FB_Year)
+str(FB_Year)
+
+FB_Year$f_YEAR <- factor(FB_Year$YEAR)
+```
+
+#Analyzing the #Posts with Years
+```{r}
+library(ggplot2)
+
+ggplot(data = FB_Year, aes(YEAR, Posts))+
+  geom_line()+
+  scale_x_continuous(breaks= seq(2011,2017,1))+
+  scale_y_continuous(breaks= seq(0,800,100))+
+  geom_line(data = FB_Year,aes(YEAR, Comments),color = 'blue')
+```
+
+#Analyzing the Same data for Mean Likes and Comments
+```{r}
+ggplot(data = FB_Year,aes(YEAR, Mean_Likes))+
+  geom_line()+
+  ylab("Mean_Likes/Mean_Comments")+
+  scale_y_continuous(breaks=seq(0,30,5))+
+  scale_x_continuous(breaks= seq(2011,2017,1))+
+  geom_line(data = FB_Year,aes(YEAR, Mean_Comments),color = 'red')
+```
+
+#Analyzing the Comments data as per the Year
+```{r}
+ggplot(data = FB_Year,aes(YEAR, log2(Comments)))+
+  geom_line()+
+  scale_x_continuous(breaks= seq(2011,2017,1))+
+  geom_line(data = FB_Year,aes(YEAR, Mean_Comments),color = 'red')+
+  geom_line(data = FB_Year,aes(YEAR, Median_Comments),color = 'blue')
+```
+
+#Loading the Initial Dataset
+```{r}
+getwd()
+
+FB <- read.csv('PythonScripts&Data/FBposts_Words.csv')
+str(FB)
+FB$fYear<- factor(FB$YEAR)
+FB$fMonth<- factor(FB$MONTH)
+
+summary(FB$COMMENTS)
+summary(FB$LIKES)
+```
+
+
+#Analyzing relationship between LIKES and COMMENTS over the course of Years
+```{r}
+ggplot(data=subset(FB,YEAR!=2010),aes(COMMENTS, LIKES))+
+  geom_point(aes(color = fYear))+
+  scale_x_continuous(breaks=seq(0,20,2),limits = c(0,20))+
+  scale_y_continuous(limits = c(0,125))
+```
+Notes: From the graph it is clear that the posts from Latest Years are the ones to garner more no. of likes as compared to the posts to have received high number of Comments which are from Early Years!
+
+#Putting the factor of NUMBER OF WORDS used in the post
+```{r}
+ggplot(data=subset(FB,YEAR!=2010),aes(COMMENTS, LIKES))+
+  geom_point(aes(color = fYear, size=WORDS))+
+  scale_x_continuous(breaks=seq(0,20,2),limits = c(0,20))+
+  scale_y_continuous(limits = c(0,125))
+```
+
+#Divide the Length of the Post in 5 Categories
+```{r}
+FB$Words_Level <- factor(cut(FB$TOTAL_WORDS, breaks = c(-1,25,50,75,100,226), labels = c("Vlow","Low","Med","High","Vhigh")))
+```
+
+
+#Trying to get a clear picture of the relationship between WORDS and LIKES
+```{r}
+ggplot(data=subset(FB,YEAR!=2010),aes(COMMENTS, LIKES))+
+  geom_point(aes(color = Words_Level))+
+  facet_wrap(~YEAR,scales="free")
+```
+Notes: It appears that beginning from year 2013, the posts with VERY LOW words(<25) or LOW(<50) have been getting more LIKES as compared to COMMENTS, with some outliers here and there in the form of words with more number of WORDS!
+
+#Distribution of LIKES, COMMENTS with the week of the month
+```{r}
+FB$Week <- cut(FB$DAY, breaks = c(0,8,15,22,28,31), labels = 1:5)
+
+ggplot(data=subset(FB,YEAR!=2010),aes(Week))+
+  geom_histogram(stat="count",color="black",fill="#678912")
+```
+Notes: From this plot, it becomes evident that No. of posts spread across Weeks of a month are similar in distribution except for the week 5! Let's see if the distribution is same across all the years.
+
+```{r}
+ggplot(data=subset(FB,YEAR!=2010),aes(Week))+
+  geom_histogram(stat="count",color="black",fill="#678912")+
+  facet_wrap(~YEAR, scales="free")
+```
+Notes: From 2012 through 2016, the maximum no. of posts were shared during the first week of the month, with approximately same number of posts shared across the weeks except the last week(5th). But it is the scale of No. of Posts which differs considerably from one year to another. Year 2013's scale is almost double to that in year 2012, 2014 and 2016. But Year 2017, the scale has already taken a 4 times jump!
+
+
+```{r}
+ggplot(data=subset(FB,YEAR!=2010 & TYPE!='note'),aes(Week))+
+  geom_histogram(stat="count",aes(fill=TYPE),color="black")+
+  facet_wrap(~YEAR, scales="free")
+```
+Notes: For Year 2012-> Photo, 2013-> Status, 2014-> Status & Photo, 2015 -> Status&Photo, 2017 -> Video. It is clear that it was in 2015 that considerable number of posts were shared across all the 4 categories. Prior to that it was either a clash between Photo and status in terms of more number of posts or either one of them dominated.
+
+#Distribution of WORDS across years
+```{r}
+summary(FB$WORDS)
+
+ggplot(data=subset(FB, FB$YEAR!='2010'),aes(fYear, WORDS))+
+  geom_boxplot()+
+  ylim(0,quantile(FB$WORDS,0.98))
+```
+
+#Summarize the Distribution of the LIKES as per the No. of WORDS used
+```{r}
+ggplot(data=subset(FB, FB$YEAR!='2010'),aes(Words_Level, LIKES))+
+  geom_boxplot()+
+  ylim(0,quantile(FB$LIKES,0.95))
+```
+Notes: Except for the "Very LOW" category of words, all the other categories seem to have same number of Median Likes except for the VERY HIGH category of words(100+), which has the highest median as compared to all others
+
+```{r}
+ggplot(data=subset(FB, FB$YEAR!='2010'),aes(Words_Level, LIKES))+
+  geom_boxplot()+
+  ylim(0,quantile(FB$LIKES,0.95))+
+  facet_wrap(~YEAR, scales="free")
+```
+Notes: 2012,2013 is the only year where there has been a consistent increase in the median LIKES with increase in number of words. 2014,2015 and 2016 are the 3 years, which register the Highest Median Likes for the LOW number of words used in the posts! In 2015-LOW, the Median Likes reach its zenith, close to 50. 2017 is the only year when there is an consistency in the number of likes across all the WORD Categories!
+
+#Let's explore this relationship further
+```{r}
+ggplot(data=subset(FB,YEAR!=2010),aes(Words_Level))+
+  xlab("Number of Words")+
+  geom_histogram(stat="count")
+```
+
+#Faceting the Words Distribution across the Year
+```{r}
+ggplot(data=subset(FB,YEAR!=2010),aes(Words_Level))+
+  xlab("Number of Words")+
+  geom_histogram(stat="count")+
+  facet_wrap(~YEAR,scales = "free")
+```
+Notes: For every year, the highest number of posts fall in the cateogory of having used Very Low number of Words! For 2017, the distribution is very sparse across the categories with number of POSTS very low words being Alarmingly High. That's probably the reason there was a Increase in the Median Likes for year 2017! Less No of POSTS!
+
+#Let's find out why there are less no of posts with MORE Words
+```{r}
+ggplot(data=subset(FB, YEAR!=2010 & TYPE!='note'),aes(TYPE))+
+  geom_histogram(stat="count",color="black",fill="#34A389")+
+  facet_wrap(~YEAR,scales="free")+
+  xlab("Status Type")
+```
+Notes: Importantly, there has been a gradual increase in the Video Status being shared with the years.The VIDEO status being shared began in 2013 and it increased steadily with zenith currently in 2017! The distribution across all other categories has been more or less the same throughout the years except for 2015 which registered a serious dip in the overall statuses and 2013 which saw a significant increase in the status, reaching to a maximum of 120.
+
+#Let's see the trend through Linear Graphs
+```{r}
+ggplot(data=subset(FB, YEAR!=2010 & TYPE!='note'),aes(YEAR))+
+  geom_freqpoly(stat="count",aes(color=TYPE))+
+  ylab("POSTS")+
+  scale_x_continuous(breaks=seq(2011,2017,1))+
+  scale_y_continuous(breaks = seq(0,300,50))
+```
+Notes: As visible, there is a steep increase in the number of Videos being shared in year 2017
+
+#Analyzing LIKES vs STATUS TYPE
+```{r}
+ggplot(data=subset(FB,YEAR!=2010 & TYPE!='note'),aes(WORDS,LIKES))+
+  geom_point(aes(color=TYPE))+
+  scale_y_continuous(breaks=seq(0,125,25),limits=c(0,125))+
+  scale_x_continuous(breaks=seq(0,150,25),limits=c(0,150))+
+  geom_hline(yintercept = mean(FB$LIKES),color='black')+
+  geom_hline(yintercept = median(FB$LIKES),color='red')
+               
+```
+Notes: The PHOTO Status are way ahead in generating LIKES followed by STATUS and Likes for LINK and VIDEO.
+
+#Faceting across several Years
+```{r}
+ggplot(data=subset(FB,YEAR!=2010 & TYPE!='note'),aes(WORDS,LIKES))+
+  geom_point(aes(color=TYPE))+
+  geom_hline(yintercept = mean(FB$LIKES),color='black')+
+  geom_hline(yintercept = median(FB$LIKES),color='red')+
+  facet_wrap(~YEAR,scales="free")
+```
+Notes: Distribution of Likes is same as that of Distribution of Comments
+
+```{r}
+by(FB$Words_Level, FB$YEAR, summary)
+```
+
+#Analyzing the relationship between Words and Comments
+```{r}
+ggplot(data=subset(FB, FB$YEAR!='2010'),aes(Words_Level, COMMENTS))+
+  geom_boxplot()+
+  ylim(0,quantile(FB$COMMENTS,0.98))
+```
+Notes: The Median comments are pretty same for every word category except when the number of Words are Very High, the Median comments shoot to 5 varying from 2.5 otherwise!
+
+```{r}
+by(FB$COMMENTS,FB$Words_Level, summary)
+```
+
+
+
+#Facet Wrapping the same with the YEAR
+```{r}
+ggplot(data=subset(FB, FB$YEAR!='2010'),aes(Words_Level, COMMENTS))+
+  geom_boxplot()+
+  ylim(0,quantile(FB$COMMENTS,0.98))+
+  facet_wrap(~YEAR,scales="free")
+```
+Notes: The range of number of comments is same for all the years as evident by the same Y-scale across all the years. 2014 is the only year when there is considerable number of median comments spread across all Word-Categories! The highest value of Median Comments happens in 2015 for the High category! Let's see what's the reason behind the nice Comment trends in year 2014!
+
+
+
+
+```{r}
+ggplot(data=subset(FB,YEAR!=2010),aes(Words_Level))+
+  xlab("Number of Words")+
+  geom_histogram(stat="count",color='black',fill='#565689')+
+  facet_wrap(~YEAR,scales="free")
+```
+
+
+#Let's see the variation of COMMENTS with POST Type
+```{r}
+FB$TYPE <- as.character(FB$TYPE)
+ggplot(data=subset(FB,YEAR!=2010 & TYPE!='note'),aes(WORDS,COMMENTS))+
+  geom_point(aes(color=TYPE))+
+  scale_y_continuous(breaks=seq(0,40,10),limits=c(0,40))+
+  scale_x_continuous(breaks=seq(0,150,25),limits=c(0,150))+
+  geom_hline(yintercept = mean(FB$COMMENTS),color='black')+
+  geom_hline(yintercept = median(FB$COMMENTS),color='red')
+```
+
+Notes: It is visible that High number of Comments are mostly attributed to Posts of TYPE:STATUS. The POSTS of type LINK, VIDEO are not the ones to have got many Comments! Let's see the above distribution across the Years
+
+
+```{r}
+ggplot(data=subset(FB,YEAR!=2010 & TYPE!='note'),aes(WORDS,COMMENTS))+
+  geom_point(aes(color=TYPE))+
+  facet_wrap(~YEAR,scales="free")+
+  geom_hline(yintercept = mean(FB$COMMENTS),color='black')+
+  geom_hline(yintercept = median(FB$COMMENTS),color='red')
+```
+Notes: It shows that Year 2013,2014 and 2015 were all about STATUSES with POSTS varying in length from too Few words to too Many! FOr 2016 and 2017, it were the PHOTOS to have received majority of comments! Even though, the Number of Videos were significantly higher than photos in 2017 and comparable in 2016.
+
+
+#Analyzing multiple variables simulateneously
+```{r}
+ggplot(data=subset(FB,YEAR!=2010 &YEAR!=2011 & TYPE!='note'),aes(MONTH,LIKES))+
+  geom_point(aes(color=TYPE, size=WORDS))+
+  scale_x_continuous(breaks=seq(1,12,1))+
+  ylim(0,quantile(FB$LIKES,0.98))+
+  geom_freqpoly(stat='summary',fun.y=mean)+
+  facet_wrap(~YEAR,scales="free")
+```
+Notes: This plot provides several insights into the overall process!As observed earlier, year 2013, 2014 and 2015 were dominant by STATUS with overall no. of posts being low in 2015. With the passage of years, the Number of Likes for posts with More Words has increased. From 2013 to 2016 and right into 2017, the trend is continuing. Talking about Mean LIKES, they have almost been uniform across the months except for year 2015 and 2016!Particularly in 2016, there was a steep dip in the Month of May, which was the time when I quit my job to go for further studies. And as evident, the LIKES thereafter have been marginally more than the previous ones!
+
+
+#Analyzing the Sentiments Polarity
+```{r}
+ggplot(data=subset(FB, YEAR!=2010),aes(TOTAL_WORDS,POS))+
+  geom_point()+
+  xlim(0,quantile(FB$TOTAL_WORDS,0.95))+
+  geom_smooth(FB$TOTAL_WORDS,FB$NEG)
+```
+

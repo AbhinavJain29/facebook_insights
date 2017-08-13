@@ -1,0 +1,42 @@
+
+```{r}
+setwd('/Users/ajdonna/Desktop/CoursesNpractice/FaceBook Data')
+
+Words <- read.csv('Bag_Of_Words.csv')
+str(Words)
+```
+
+#Analyzing the distribution of the Forms of Words
+```{r}
+library(ggplot2)
+head(Words)
+
+table(Words$NUM_WORDS)
+```
+
+
+#Viewing the distribuition of No. of FORMS of a particular word
+```{r}
+ggplot(data=Words,aes(NUM_WORDS))+
+  geom_histogram(stat="count",color='black',fill='#5678A0')+
+  scale_x_continuous(breaks=seq(1,7,1))
+```
+Notes: As visible most of the words have been used only in one of their FORM. Let's plot the ratio of Words belonging to one of the various FORMS
+
+#Proportion of Words present in respective FORM Categories
+```{r}
+ggplot(data=Words, aes(NUM_WORDS,POSTS))+
+  geom_point(color='red')+
+  geom_freqpoly(stat='summary',fun.y=max)+
+  geom_freqpoly(stat='summary',fun.y=mean,color='blue')+
+  scale_y_continuous(breaks=seq(0,150,25))+
+  scale_x_continuous(breaks=seq(1,7,1))
+```
+
+
+
+
+
+
+
+

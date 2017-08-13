@@ -1,0 +1,172 @@
+getwd()
+
+setwd("/Users/ajdonna/Desktop/CoursesNpractice/FaceBook\ Data/")
+
+```{r}
+FB <- read.csv('FBposts.csv')
+
+names(FB)
+str(FB)
+
+#COnverting YEAR into a FACTOR variable
+FB$YEAR <- factor(FB$YEAR)
+
+table(FB$YEAR)
+```
+
+#Getting the summary of Likes
+```{r}
+summary(FB$LIKES)
+library(ggplot2)
+ggplot(data=subset(FB, FB$YEAR!='2010'),aes(fYear, LIKES))+
+  geom_boxplot()+
+  ylim(0,50)
+```
+Notes: It is hard to foresee any trend in here. There was a increasing trend from 2013 to 2015 for the count in #Likes. But for years 2016 and 2017, the median LIKES for the posts are low as compared to previous years but the #POSTS depicting HIGH LIKE_COunt are more!
+
+
+#Analyzing the LIKES of the POSTS
+```{r}
+library(ggplot2)
+ggplot(data=FB,aes(LIKES))+
+  geom_histogram(binwidth = 5,color='black',fill='#45AB6E')+
+  geom_freqpoly()+
+  scale_x_continuous(breaks = seq(0,250,25))
+```
+
+#Better view of LIKES by adjusting the binwidth
+```{r}
+ggplot(data=FB,aes(LIKES))+
+  geom_histogram(binwidth = 25,color='black',fill='#45AB6E')+
+  geom_freqpoly()+
+  scale_x_continuous(breaks = seq(0,250,25))
+```
+
+#Let's see the similar PLOTS for comments
+```{r}
+summary(FB$COMMENTS)
+
+ggplot(data = subset(FB, !is.na(COMMENTS)),aes(YEAR, COMMENTS))+
+  geom_boxplot()
+```
+Notes: There are too many outliers outside of the INTER-QUARTILE range. Let's get a clearer picture for the same.
+
+```{r}
+ggplot(data = subset(FB, !is.na(COMMENTS)),aes(YEAR, COMMENTS))+
+  geom_boxplot()+
+  ylim(0,10)
+```
+
+Notes: It is surprising to see that for all the years, the 3rd quartile reaches only to 5 comments!Also, the median comments for most of the years have been 0, despite being too many outliers probably because of too many 0 values! We are not excluding the 0 values as they are the part of the data indicating that not too many comments are done on the posts as compared to LIKES!
+
+#Summary of COmments by YEAR
+```{r}
+by(FB$COMMENTS, FB$YEAR, summary)
+```
+
+#Calculating the LIKES, COMMENTS, POSTS grouped by YEAR
+```{r}
+library(dplyr)
+FB_YEAR <- subset(FB,!is.na(COMMENTS) & YEAR!='2010') %>%
+  group_by(YEAR) %>%
+  summarise(Mean_Likes = round(mean(LIKES)),
+            Median_Likes = median(LIKES),
+            Mean_Comments = round(mean(COMMENTS)),
+            Median_Comments = median(COMMENTS),
+            Likes=sum(LIKES),
+            Comments=sum(COMMENTS),
+            Posts = n())%>%
+  arrange(YEAR)
+
+write.csv(FB_YEAR, file='Yearly_FB_data.csv',row.names = FALSE)
+```
+
+
+#Finding the Yearly Distribution of POSTS by TYPE in LONG Format
+```{r}
+FB_TYPE_LONG <- subset(FB, !is.na(COMMENTS) & TYPE!='note' & YEAR != '2010')%>%
+  group_by(YEAR,TYPE) %>%
+  summarise(Posts = n(na.action()))%>%
+  arrange(YEAR)
+```
+
+
+#Converting from LONG format to WIDE format
+```{r}
+library(reshape2)
+FB_TYPE_WIDE <- dcast(FB_TYPE_LONG,
+                      YEAR ~ TYPE,
+                      value.var='Posts')
+```
+
+
+#Replacing the NA values in WIDE format with 0
+```{r}
+FB_TYPE_WIDE[is.na(FB_TYPE_WIDE)] <- 0
+``` 
+
+#Combining the COLUMNS from FB_TYPE_WIDE to FB_YEAR
+```{r}
+FB_YEAR$TYPE_LINK <- FB_TYPE_WIDE$link
+FB_YEAR$TYPE_PHOTO <- FB_TYPE_WIDE$photo
+FB_YEAR$TYPE_STATUS <- FB_TYPE_WIDE$status
+FB_YEAR$TYPE_VIDEO <- FB_TYPE_WIDE$video
+
+#Writing the DATAframe to a CSV file
+write.csv(FB_YEAR, file='Yearly_FB_data.csv',row.names = FALSE)
+```
+
+
+
+##Calculating the LIKES, COMMENTS, POSTS grouped by YEAR, MONTH
+```{r}
+FB_MONTH <- subset(FB,!is.na(COMMENTS) & YEAR!='2010') %>%
+  group_by(YEAR,MONTH) %>%
+  summarise(Mean_Likes = round(mean(LIKES)),
+            Median_Likes = round(median(LIKES)),
+            Mean_Comments = round(mean(COMMENTS)),
+            Median_Comments = round(median(COMMENTS)),
+            Likes=sum(LIKES),
+            Comments=sum(COMMENTS),
+            Posts = n())%>%
+  arrange(YEAR)
+```
+
+
+#Finding the Monthly Distribution of POSTS by TYPE in LONG Format
+```{r}
+FB_TYPE_MON <- subset(FB, !is.na(COMMENTS) & TYPE!='note' & YEAR != '2010')%>%
+  group_by(YEAR,MONTH,TYPE) %>%
+  summarise(Posts = n())%>%
+  arrange(YEAR)
+```
+
+#Converting from LONG format to WIDE format
+```{r}
+FB_MON_TYPE <- dcast(FB_TYPE_MON,
+                     YEAR + MONTH ~ TYPE,
+                     value.var = 'Posts')
+```
+
+#Replacing the NA values in WIDE format with 0
+```{r}
+FB_MON_TYPE[is.na(FB_MON_TYPE)] <- 0
+```
+
+#Combining the COLUMNS from FB_TYPE_WIDE to FB_YEAR
+```{r}
+FB_MONTH$TYPE_LINK <- FB_MON_TYPE$link
+FB_MONTH$TYPE_PHOTO <- FB_MON_TYPE$photo
+FB_MONTH$TYPE_STATUS <- FB_MON_TYPE$status
+FB_MONTH$TYPE_VIDEO <- FB_MON_TYPE$video
+
+#Writing the DATAframe to a CSV file
+write.csv(FB_MONTH, file='Monthly_FB_data.csv',row.names = FALSE)
+```
+
+
+
+
+
+
+

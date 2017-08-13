@@ -1,0 +1,61 @@
+#POSTS Frequency with the DAY of the MONTH
+```{r}
+ggplot(data=subset(FB,YEAR!=2010 & YEAR!=2011),aes(DAY))+
+  geom_histogram(stat="count",color="black",fill="#45AB6E")+
+  scale_x_continuous(breaks = seq(0,31,7))+
+  facet_wrap(~YEAR,scales = "free")
+
+```
+Notes: Except for the year 2015, there has been post on every single day of the month measured for the whole year,across all the 12 months! It appears from far-off that highest number of posts for a day are 26 in 2017! But they are the sum total of posts appearing on a particular day summed over 12 months! Let's see the distribution across several months. The days for which POSTs shared are maximum is 15,161
+
+#YEAR 2012, MONTH-WIse distribution of POSTS shared on a day
+```{r}
+ggplot(data=subset(FB,YEAR==2012),aes(DAY))+
+geom_histogram(stat="count",color="black",fill="#45ABEE")+
+scale_x_continuous(breaks = seq(0,31,7))+
+facet_wrap(~MONTH,scales = "free")
+```
+
+
+#YEAR 2013, MONTH-WIse distribution of POSTS shared on a day
+```{r}
+ggplot(data=subset(FB,YEAR==2013),aes(DAY))+
+geom_histogram(stat="count",color="black",fill="#45ABBB")+
+scale_x_continuous(breaks = seq(0,31,7))+
+facet_wrap(~MONTH,scales = "free")
+```
+
+
+#YEAR 2014, MONTH-WIse distribution of POSTS shared on a day
+```{r}
+ggplot(data=subset(FB,YEAR==2014),aes(DAY))+
+geom_histogram(stat="count",color="black",fill="#8933A0")+
+scale_x_continuous(breaks = seq(0,31,7))+
+facet_wrap(~MONTH,scales = "free")
+```
+
+#YEAR 2015, MONTH-WIse distribution of POSTS shared on a day
+```{r}
+ggplot(data=subset(FB,YEAR==2015),aes(DAY))+
+geom_histogram(stat="count",color="black",fill="#8955A0")+
+scale_x_continuous(breaks = seq(0,31,7))+
+facet_wrap(~MONTH,scales = "free")
+```
+
+
+#YEAR 2016, MONTH-WIse distribution of POSTS shared on a day
+```{r}
+ggplot(data=subset(FB,YEAR==2016),aes(DAY))+
+geom_histogram(stat="count",color="black",fill="#55AE89")+
+scale_x_continuous(breaks = seq(0,31,7))+
+facet_wrap(~MONTH,scales = "free")
+```
+
+#YEAR 2017, MONTH-WIse distribution of POSTS shared on a day
+```{r}
+ggplot(data=subset(FB,YEAR==2017),aes(DAY))+
+geom_histogram(stat="count",color="black",fill="#55AE89")+
+scale_x_continuous(breaks = seq(0,31,7))+
+facet_wrap(~MONTH,scales = "free")
+```
+Notes: For Every YEAR, POSTS have only been shared for the first 9 months! No Posts in last 3 months of the year! Except for the year 2017, Every YEAR JANUARY is the busiest month both in terms of Number of POSTS shared and consistent sharing for the whole month! The scale changed drastically for Year 2017. The Maximum POSTS shared on a day are 12, on a month in April -> 12.
