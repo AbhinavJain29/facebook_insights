@@ -1,5 +1,5 @@
 # facebook_insights
-This repository deals with the project of analyzing my FACEBOOK data in **R, python** through their Developers API.
+This repository deals with the project of analyzing my FACEBOOK data in **R, python** extracted through Facebook Graph API.
 
 ## DIRECTORY INFO:
 * **FB_Analysis.html** This is the resulting html file depicting the analysis results, generated through the knit option in R Studio.
