@@ -1,0 +1,442 @@
+# Analyzing my Facebook Data of the past 7 Years
+This report is based on the analysis done on my Facebook data extracted through Facebook Graph API and then cleaned and wrangled to create appropriate datasets using Python and R.
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+setwd('/Users/ajdonna/Desktop/Studies/FaceBook Data/R_Scripts')
+```
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+FB_Year <- read.csv('Yearly_FB_data.csv')
+```
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+summary(FB_Year)
+str(FB_Year)
+
+FB_Year$f_YEAR <- factor(FB_Year$YEAR)
+```
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+library(ggplot2)
+library(dplyr)
+library(corrplot)
+```
+
+
+## Important Insights from the data
+There have been many insights from the Facebook data. The important ones are present below:
+
+### Distribution of LIKES & COMMENTS with YEAR
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+ggplot(data = FB_Year )+
+  geom_line(aes(x = YEAR, y = Likes, color='red'))+
+  geom_line(aes(x = YEAR, y = Comments, color='blue'))+
+  ylab('')+
+  scale_x_continuous(breaks= seq(2011,2017,1))+
+  scale_color_discrete(name = "", labels = c("Comments", "Likes"))
+```
+
+* The #Likes are much more than #Comments for any particular year. 
+* Infact, Likes are approx. 9 times that of Comments, in the year 2016!
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+FB <- read.csv('FBposts_Words.csv')
+str(FB)
+FB$fYear<- factor(FB$YEAR)
+FB$fMonth<- factor(FB$MONTH)
+
+summary(FB$COMMENTS)
+summary(FB$LIKES)
+```
+
+
+### Variation in LIKES & COMMENTS with #WORDS
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+ggplot(data=subset(FB,YEAR!=2010),aes(COMMENTS, LIKES))+
+  geom_point(aes(color = fYear, size=UNIQ_WORDS))+
+  scale_x_continuous(breaks=seq(0,20,2),limits = c(0,20))+
+  scale_y_continuous(limits = c(0,125))+
+  scale_color_brewer()
+```
+
+* With Increase in WORDS, Likes & Comments decrease. 
+* Less Comments in Year 2017.
+* Highest Likes for Posts from 2016 & 2017.
+* High #Comments have been for Posts from 2013, 2014 and 2015.
+
+### Distribution of POSTS across WORDS_LEVEL
+POSTS are divided in 4 categories based on #WORDS:
+
+* Vlow ->  0 - 25
+* Low  -> 25 - 75
+* Med  -> 75 -100
+* High ->100 -Max
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+FB$Words_Level <- factor(cut(FB$TOTAL_WORDS, breaks = c(-1,25,75,100,610), labels = c("Vlow","Low","Med","High")))
+
+table(FB$Words_Level)
+```
+
+Most of the Posts fall in the **Vlow** category, followed by **High** category.
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+ggplot(data=subset(FB,YEAR!=2010),aes(Words_Level))+
+  xlab("Words_Level")+
+  ylab("#Posts")+
+  geom_histogram(stat="count",color='black',fill='slategray2')+
+  scale_y_continuous(breaks=seq(0,700,100))+
+  facet_wrap(~YEAR, scales = "free")
+```
+
+* Every year, Words_Level **Vlow** has the highest number of posts!
+* For 2017, almost all Posts have **Vlow** Words_Level. 
+
+### Distribution of status TYPE across YEAR
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+ggplot(data=subset(FB, YEAR!=2010 & TYPE!='note'),aes(YEAR))+
+  geom_histogram(stat='count',color='black',aes(fill=TYPE))+
+  scale_x_continuous(breaks=seq(2011,2017,1))+
+  ylab('#POSTS')
+```
+
+* For Year 2012-> Photo, 2013-> Status, 2014-> Photo, 2015 -> Photo, 2016 -> Photo 2017 -> Video. 
+* In 2015, 2016, 2017 posts were shared across all the 4 categories. 
+* From 2011-2014, the **Photo and status** TYPE gave a tough competition.
+
+### Distribution of POSTS across the STATUS_TYPE faceted around YEAR
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+ggplot(data=subset(FB, YEAR!=2010 & TYPE!='note'),aes(TYPE))+
+  geom_histogram(stat="count",color="black",fill="wheat1")+
+  facet_wrap(~YEAR,scales="free")+
+  xlab("Status_Type")+
+  ylab("#Posts")
+```
+
+Importantly, there has been a gradual increase in the Video Status being shared with the years:
+
+* The VIDEO status being shared began in 2013.
+* It increased steadily with zenith currently in 2017!
+* There has been 500% increase in VIDEO Posts in 2017 since 2016!
+
+### Distribution of LIKES & COMMENTS with status TYPE
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+ggplot(data=subset(FB,YEAR!=2010 & TYPE!='note'),aes(TOTAL_WORDS,LIKES))+
+  geom_point(aes(color=TYPE,size=COMMENTS))+
+  scale_y_continuous(breaks=seq(0,125,25),limits=c(0,125))+
+  scale_x_continuous(breaks=seq(0,200,25),limits=c(0,200))+
+  geom_hline(yintercept = mean(FB$LIKES),color='black')
+               
+```
+
+* The **Photo** Posts generate MOST Likes and MORE Likes.
+* The **Status** Posts receive consistent #Likes across TOTAL_WORDS.
+* They are followed by **Status**, then **Link and Video**.
+
+### Distribution of HOUR at which POST is updated
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+FB$HOUR <- as.numeric(as.character(FB$HOUR)) 
+```
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+ggplot(data=subset(FB, YEAR!=2010), aes(HOUR))+
+  geom_bar(color='black', fill='lightcyan2')+
+  scale_x_continuous(breaks = seq(0,24,1))+
+  scale_y_continuous(breaks = seq(0,150,25))+
+  ylab('#Posts')
+```
+
+It is clear that there is a **BiModal Distribution** of Posts with Hour of the day:
+
+* There are posts for every hour of the day.
+* **Steep rise** in the No of Posts at **16,17 and 18 Hours** (100+ at each hour)
+* First Peak also appears at 5am due to different time zones.( Now I am in MST as compared to IST earlier.)
+
+### Distribution of LIKES & COMMENTS with HOUR
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+ggplot(data=subset(FB, YEAR!=2010),aes(HOUR,LIKES))+
+  geom_point(fill='black', color='blue',aes(size=COMMENTS))+
+  scale_x_continuous(breaks = seq(0,24,1))+
+  scale_y_continuous(breaks=seq(0,150,25),limits=c(0,quantile(FB$LIKES, 0.98)))
+```
+
+* More #Comments are viewed for posts at hour 16, 17 and 18. 
+* These are also the HOURS at which Highest #POSTS are updated.
+* Also, HIGH Comments are viewed at HOURS 7-11.
+
+### Distribution of SENTIMENT with TOTAL_WORDS
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+ggplot(data=subset(FB, YEAR!=2010),aes(LIKES,round(COMP,2)))+
+  geom_point(aes(color=Words_Level,size=COMMENTS))+
+  ylab('Sentiment Polarity')+
+  xlim(0,quantile(FB$LIKES,0.95))
+```
+
+* Majority of the POSTS have **POSITIVE Sentiment**(0 to 1).
+* Posts with **NEGATIVE Sentiment have Low COMMENTS**.
+* Approx. all the Posts with **High** Words_Level are Extremely Positive!
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+ggplot(data=subset(FB, YEAR!=2010),aes(TOTAL_WORDS,POS))+
+  geom_point()+
+  ylab('Positive Polarity')+
+  xlim(0,quantile(FB$TOTAL_WORDS,0.95))
+```
+
+**Note**: Although Posts with **Words_Level: High** are extremely positive but with the **increase in TOTAL_WORDS** there is a **decline in Positivity**.
+
+### Bringing together Multiple variables
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+ggplot(data=subset(FB,YEAR!=2010 &YEAR!=2011 & TYPE!='note'),aes(MONTH,LIKES))+
+  geom_point(aes(color=TYPE, size=TOTAL_WORDS))+
+  scale_x_continuous(breaks=seq(1,12,1))+
+  ylim(0,quantile(FB$LIKES,0.98))+
+  geom_freqpoly(stat='summary',fun.y=mean)+
+  facet_wrap(~YEAR,scales="free")
+```
+
+* YEAR 2013, 2014 and 2015 were dominant by posts of type: STATUS.
+* The #Likes for posts with more TOTAL_WORDS has increased. 
+* The #Posts are very low in 2015. 
+* Talking about Mean LIKES (represented by Black Line), they have almost been uniform across the months except for year 2015 and 2016! 
+* There is a steep dip in May 2016, which was the time when I quit my job to go for further studies. 
+* The #LIKES in Year 2017 are Low, comparable to initial Years of my Facebook Journey!
+
+## Other significant trends
+The trends below provide some more insights into the dataset and have been useful enough to reach at the conclusions and insights above.
+
+### Distribution of Posts with YEAR
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+ggplot(data = FB_Year, aes(YEAR, Posts))+
+  geom_line()+
+  ylab('#POSTS')+
+  scale_x_continuous(breaks= seq(2011,2017,1))+
+  scale_y_continuous(breaks= seq(0,800,100))
+```
+
+The #Posts increase gradually in the beginning followed by a similar decline in year 2014 and 2015. It begins to catch up in year 2016 but it is **steepest in Year 2017**! There is still 4 months in the year 2017!
+
+### Distribution of Mean_Likes and Mean_Comments with Year
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+ggplot(data = FB_Year )+
+  geom_line(aes(x = YEAR, y = Mean_Likes, color='red'))+
+  geom_line(aes(x = YEAR, y = Mean_Comments, color='blue'))+
+  ylab("")+
+  scale_x_continuous(breaks= seq(2011,2017,1))+
+  scale_color_discrete(name = "", labels = c("Mean_Comments", "Mean_Likes"))
+```
+
+The Mean Comments and Mean Likes also follow the similar relationship as earlier, with Mean_Comments approx. 9 times the Mean_Likes for the year 2016.
+
+### Relationship between LIKES & COMMENTS across the YEAR
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+ggplot(data=subset(FB,YEAR!=2010),aes(COMMENTS, LIKES))+
+  geom_point(aes(color = fYear))+
+  scale_x_continuous(breaks=seq(0,20,2),limits = c(0,20))+
+  scale_y_continuous(limits = c(0,125))
+```
+
+From the graph it is clear that the posts from Latest Years are the ones to garner more no. of likes as compared to the posts to have received high number of Comments which are from Early Years!
+
+### Variation in LIKES & COMMENTS with WORDS_LEVEL
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+ggplot(data=subset(FB,YEAR!=2010),aes(COMMENTS, LIKES))+
+  geom_point(aes(color = Words_Level))+
+  facet_wrap(~YEAR,scales="free")
+```
+
+* Year 2013,2014 were a Uniform mix of Posts from all Words_Level.
+* There has been a consistent growth in the Likes Scale, from 10 in 2011 to 200 in 2017.
+* **High** Words_Level gets High #Comments.
+* **Vlow** Words_Level gets Low #Comments
+
+### Distribution of TOTAL_WORDS across YEAR
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+ggplot(data=subset(FB, FB$YEAR!='2010'),aes(fYear, TOTAL_WORDS))+
+  geom_boxplot()+
+  xlab('YEAR')+
+  ylim(0,quantile(FB$TOTAL_WORDS,0.95))
+```
+
+Except for the Year 2012 and 2017, Total_Words being used in the Posts across all the years have been approximately the same falling somewhere in the category of <25 words **Vlow** Words_Level.
+
+### Distribution of the LIKES as per the WORDS_LEVEL
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+ggplot(data=subset(FB, FB$YEAR!='2010'),aes(Words_Level, LIKES))+
+  geom_boxplot()+
+  ylim(0,quantile(FB$LIKES,0.95))
+```
+
+Except for the **Vlow** category of words, all the other categories seem to have same number of Median Likes.
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+ggplot(data=subset(FB, FB$YEAR!='2010'),aes(Words_Level, LIKES))+
+  geom_boxplot()+
+  facet_wrap(~YEAR, scales="free")
+```
+
+* 2012,2013 is the only year where there has been a consistent increase in the median LIKES with increase in number of words. 
+* 2014 is the year which register the Highest Median Likes for the **Low** Words_Level posts!
+
+### Distribution of Posts across WORDS_LEVEL
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+ggplot(data=subset(FB,YEAR!=2010),aes(Words_Level))+
+  xlab("Words_Level")+
+  ylab("#Posts")+
+  geom_histogram(stat="count",color='black',fill='slategray2')+
+  scale_y_continuous(breaks=seq(0,700,100))
+```
+
+### Trend in status TYPE across YEAR
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+ggplot(data=subset(FB, YEAR!=2010 & TYPE!='note'),aes(YEAR))+
+  geom_freqpoly(stat="count",aes(color=TYPE))+
+  ylab("#POSTS")+
+  scale_x_continuous(breaks=seq(2011,2017,1))+
+  scale_y_continuous(breaks = seq(0,300,50))
+```
+
+The steep increase in the number of Videos being shared in year 2017 is clearly visible.
+
+#Distribution of LIKES with TOTAL_WORDS across YEAR
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+ggplot(data=subset(FB,YEAR!=2010 & TYPE!='note'),aes(TOTAL_WORDS,LIKES))+
+  geom_point(aes(color=TYPE))+
+  geom_hline(yintercept = mean(FB$LIKES),color='black')+
+  facet_wrap(~YEAR,scales="free")
+```
+
+As per the Latest Statistics, Posts of type **Photo** generate MOST Likes followed by **Status**.
+
+
+### Distribution of COMMENTS across the WORDS_LEVEL
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+ggplot(data=subset(FB, FB$YEAR!='2010'),aes(Words_Level, COMMENTS))+
+  geom_boxplot()+
+  ylim(0,quantile(FB$COMMENTS,0.98))
+```
+
+The median **Comments** are highest for **High** Words_Level which is similar to the distribution of **Likes**. 
+
+
+### Facet Wrapping the same with the YEAR
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+ggplot(data=subset(FB, FB$YEAR!='2010'),aes(Words_Level, COMMENTS))+
+  geom_boxplot()+
+  ylim(0,quantile(FB$COMMENTS,0.98))+
+  facet_wrap(~YEAR,scales="free")
+```
+
+* The range of number of comments is same for all the years as evident by the same Y-scale across all the years.
+* 2014 is the only year when there is considerable number of comments spread across all Words_Level! 
+* The highest value of Median Comments happens in 2014 for the **Low** category! 
+
+**Let's try to find the reason behind the uniform comment trends in year 2014!**
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+ggplot(data=subset(FB,YEAR==2014 & TYPE!='note'),aes(Words_Level))+
+  xlab("Words_Level")+
+  ylab("#Posts")+
+  ggtitle("Stats for posts in Year 2014")+
+  geom_histogram(stat="count",color='black',aes(fill=TYPE))
+```
+
+For Year 2014, the Posts of Type **Status**/**Photo** are the ones dominantly present across Words_Level.
+Since, these two TYPE generate most Likes/Comments, hence the Comment Trends in 2014.
+
+### Variation of COMMENTS with status TYPE
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+FB$TYPE <- as.character(FB$TYPE)
+ggplot(data=subset(FB,YEAR!=2010 & TYPE!='note'),aes(TOTAL_WORDS,COMMENTS))+
+  geom_point(aes(color=TYPE))+
+  scale_y_continuous(breaks=seq(0,30,10),limits=c(0,30))+
+  scale_x_continuous(breaks=seq(0,150,25),limits=c(0,150))+
+  geom_hline(yintercept = mean(FB$COMMENTS),color='black')
+```
+
+* It is visible that **More Comments** are mostly attributed to posts of **TYPE:STATUS**. 
+* The POSTS of type LINK, VIDEO didn't get many Comments! 
+
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+ggplot(data=subset(FB,YEAR!=2010 & TYPE!='note'),aes(TOTAL_WORDS,COMMENTS))+
+  geom_point(aes(color=TYPE))+
+  facet_wrap(~YEAR,scales="free")+
+  geom_hline(yintercept = mean(FB$COMMENTS),color='black')
+```
+
+* It shows that Year **2013,2014 and 2015** were all about **STATUS** varying in length from too Few words to too Many! 
+* For **2016 and 2017, PHOTOS** to have received majority of comments! 
+* The above is true even though, the Number of Videos were significantly higher than photos in 2017 and comparable in 2016!
+
+### Distribution of LIKES with HOUR
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+ggplot(data=subset(FB, YEAR!=2010),aes(HOUR,LIKES))+
+  geom_point()+
+  scale_x_continuous(breaks = seq(0,24,1))+
+  scale_y_continuous(breaks=seq(0,150,25),limits=c(0,quantile(FB$LIKES, 0.98)))+
+  geom_freqpoly(stat = 'summary', fun.y = mean, color='red')
+```
+
+* Mean LIKES are approx. same throughout the day.
+* The peaks occur at 8AM, 16 and 20 hours!
+
+### Distribution of COMMENTS with HOUR.
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+ggplot(data=subset(FB, YEAR!=2010),aes(HOUR,COMMENTS))+
+  geom_point()+
+  scale_x_continuous(breaks = seq(0,24,1))+
+  scale_y_continuous(breaks=seq(0,50,5),limits=c(0,25))+
+  geom_freqpoly(stat = 'summary', fun.y = mean, color='red')
+```
+
+* Similar to LIKES,Mean COMMENTS are same throughout the day.
+* Peak occurs at 9 and 16 HOURS.
+
+### Ratio of UNIQ_WORDS/TOTAL_WORDS
+UNIQ_WORDS -> #Words that remain after removing the common words also known as StopWords.
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+FB$Uniq_Ratio <- round(FB$UNIQ_WORDS /(FB$TOTAL_WORDS + 1),2)
+```
+
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+ggplot(data=subset(FB, YEAR!=2010 & Uniq_Ratio!=0.00), aes(Uniq_Ratio))+
+  geom_histogram(stat="count", color='black',fill="skyblue2")+
+  scale_y_continuous(breaks = seq(0,30,5))+
+  scale_x_continuous(breaks=seq(0.3,0.9,0.05), limits = c(0.3,0.7))+
+  ylab("#Posts")
+```
+
+From the Plot above, there is an almost Normal Distribution of the Uniq_Ratio, with the peak occuring at 0.45 approx. It means that no of UNIQ_WORDS for posts were about 45% of the TOTAL_WORDS!
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+ggplot(data=subset(FB, YEAR!=2010 & Uniq_Ratio!=0.00), aes(Uniq_Ratio))+
+  geom_histogram(stat="count", color='black',fill="skyblue2")+
+  ylab("#Posts")+
+  facet_wrap(~YEAR, scales = "free")
+```
